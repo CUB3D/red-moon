@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 	{
 		if (line == "exit")
 		{
-			std::cout << "Recived exit!\n";
+			std::cout << "Received exit!\n";
 			break;
 		}
 		
