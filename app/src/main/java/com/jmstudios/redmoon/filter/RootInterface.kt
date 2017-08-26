@@ -11,42 +11,6 @@ import java.io.File
 
 import com.jmstudios.redmoon.util.Logger
 
-
-// TODO: Move these 2 to different file
-interface Filter {
-    fun start()
-    fun stop()
-    fun setColor(profile: Profile, fadePercent: Int)
-}
-
-
-class FilterManager(private val filter: Filter) {
-    var activeSessions: Int = 0
-
-    fun start() {
-        if (activeSessions < 1) {
-            filter.start()
-        }
-        activeSessions++
-    }
-
-    fun stop() {
-        activeSessions--
-        if (activeSessions < 1) {
-            filter.stop()
-        }
-    }
-
-    fun setColor(profile: Profile, fadePercent: Int) {
-        if (activeSessions < 1) {
-            // TODO: Complain about filter not being started
-        } else {
-            filter.setColor(profile, fadePercent)
-        }
-    }
-}
-
-
 class RootFilter(filePath: String) : Filter {
 
     companion object : Logger()
@@ -69,7 +33,7 @@ class RootFilter(filePath: String) : Filter {
         // Waiting for smichel to implement NDK
     }
 
-    override fun setColor(profile: Profile, fadePercent: Int) {
+    override fun setColor(profile: Profile) {
         // TODO: Generate command from profile
         val surfaceCommand = ""
         f.printWriter().use { out ->
