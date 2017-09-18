@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2017 Joona <joonatoona@digitalfishfun.com>
+ * SPDX-License-Identifier: GPL-3.0+
+ */
+
 #include <fstream>
 #include <string>
 #include <iostream>
