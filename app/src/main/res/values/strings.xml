@@ -191,4 +191,6 @@
     <!-- Notification channel descriptions -->
     <string name="notification_channel_overlay_name">Overlay Control</string>
     <string name="notification_channel_overlay_description">The persistent overlay control notification</string>
+    <string name="pref_key_root_mode">RootMode</string>
+    <string name="pref_title_root_mode">Root Mode</string>
 </resources>

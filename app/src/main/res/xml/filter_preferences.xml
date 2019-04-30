@@ -49,6 +49,11 @@
         android:key="@string/pref_key_lower_brightness"
         android:title="@string/pref_title_lower_brightness"
         android:defaultValue="false" />
+
+    <CheckBoxPreference
+      android:key="@string/pref_key_root_mode"
+      android:title="@string/pref_title_root_mode"
+      android:defaultValue="false" />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_category_other">
