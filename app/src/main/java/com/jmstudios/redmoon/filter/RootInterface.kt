@@ -12,13 +12,16 @@ import java.io.File
 import com.jmstudios.redmoon.util.Logger
 
 class RootFilter(filePath: String) : Filter {
+    override var profile: Profile
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        set(value) {}
 
     companion object : Logger()
 
     private val path = filePath
     private var f = File(filePath)
 
-    override fun start() {
+    override fun onCreate() {
         Log.i("Starting root mode listener")
         if (!f.exists()) {
             Log.i("Pipe doesn't exist, creating")
@@ -33,7 +36,7 @@ class RootFilter(filePath: String) : Filter {
         // Waiting for smichel to implement NDK
     }
 
-    override fun setColor(profile: Profile) {
+    fun setColor(profile: Profile) {
         // TODO: Generate command from profile
         val surfaceCommand = ""
         f.printWriter().use { out ->
@@ -41,7 +44,7 @@ class RootFilter(filePath: String) : Filter {
         }
     }
 
-    override fun stop() {
+    override fun onDestroy() {
         Log.i("Stopping root mode listener")
         f.printWriter().use { out ->
             out.println("exit")
