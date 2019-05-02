@@ -6,6 +6,7 @@
 package com.jmstudios.redmoon.filter
 
 import com.jmstudios.redmoon.RedMoonApplication
+import com.jmstudios.redmoon.ThemedAppCompatActivity
 import com.jmstudios.redmoon.filter.overlay.Overlay
 import com.jmstudios.redmoon.model.Profile
 import java.io.DataOutputStream
@@ -20,6 +21,7 @@ class RootFilter() : Filter {
     override var profile = activeProfile.off
         set(value) {
             Overlay.Log.i("profile set to: $value")
+            updateFilter(value)
             field = value
         }
 
@@ -30,17 +32,25 @@ class RootFilter() : Filter {
     private val path = FIFO_PATH
     private var f = File(path)
 
-    private var reShiftProcess: Process? = null
+    private var thread: Thread? = null
+    private var active = false
+
+    fun updateFilter(profile: Profile) {
+        println("Updating filter")
+        Shell.exec("su").use {
+            it.exec("print '1015 i32 1 f 0.68 f -5.94743e-05 f -5.94743e-05 f 0 f 0.978947 f 0.978947 f -1.05344e-15 f 0 f 0.00472379 f -5.94743e-05 f 0.978947 f 0 f 0 f 0 f 0 f 0.978947' | tee $path")
+        }
+    }
 
     override fun onCreate() {
         Log.i("Starting root mode listener")
         if (!f.exists()) {
             Log.i("Pipe doesn't exist, creating")
-            // `mkfifo` if pipe is non-existent
-            val sh = Runtime.getRuntime().exec("sh")
-            val shOut = DataOutputStream(sh.outputStream)
-            shOut?.writeBytes("mkfifo $path \n")
-            shOut?.flush()
+
+            Shell.exec("su").use {
+                it.exec("mkfifo $path")
+                it.exec("chmod 666 $path") // Allow others to write to the fifo
+            }
         }
 
         println("Start root mode listener imp")
@@ -50,58 +60,41 @@ class RootFilter() : Filter {
         val executablePath = "${pkg.applicationInfo.nativeLibraryDir}/re-shift.so"
         println("native lib dir: $executablePath")
 
-        Thread {
-            // Run the executable
-            Shell.exec("su").use {
-                it.exec("$executablePath $FIFO_PATH")
-                while(true) {
-                    val line = it.readLine()
-                    if(line == "Goodbye") {
-                        break
+        active = true
+
+        thread = Thread {
+            while(active) {
+                // Run the executable
+                Shell.exec("su").use {
+                    it.exec("$executablePath $FIFO_PATH")
+                    while (active) {
+                        val line = it.readLine()
+                        if (line == "Goodbye") {
+                            break
+                        }
+                        println("Got output $line")
                     }
-                    println("Got output $line")
                 }
             }
             println("FIFO poll ended")
-        }.start()
-
-        //TODO: can this be lateinit
-//        reShiftProcess = Runtime.getRuntime().exec("")
-
-
-//
-//
-//
-//        val input = File(pkg.applicationInfo.nativeLibraryDir, "re-shift.so")
-////        val output = File("/data/local/tmp/re-shift")
-////        if(!output.exists())
-////            output.createNewFile()
-////        input.copyTo(output)
-//
-////        Runtime.getRuntime().exec("chmod 777 /data/local/tmp/re-shift && ./data/local/tmp/re-shift $path")
-//        Runtime.getRuntime().exec(".${input.absolutePath} $path")
-//
-//        println("Ending here")
-
-        // TODO: Start listener
-        // Waiting for smichel to implement NDK
-    }
-
-    fun setColor(profile: Profile) {
-        // TODO: Generate command from profile
-        val surfaceCommand = ""
-        f.printWriter().use { out ->
-            out.println(surfaceCommand)
         }
+
+        thread?.start()
+
+        updateFilter(profile)
     }
 
     override fun onDestroy() {
         Log.i("Stopping root mode listener")
 
-        if(f.exists()) {
-            f.printWriter().use { out ->
-                out.println("exit")
-            }
+//        f.printWriter().use {
+//            it.println("exit")
+//        }
+
+        active = false
+
+        Shell.exec("su").use {
+            it.exec("service call SurfaceFlinger 1015 i32 0")
         }
     }
 }

@@ -7,6 +7,15 @@
 #include <string>
 #include <iostream>
 
+const static std::string STOP_COMMAND = "1015 i32 0";
+
+
+void runCommand(const std::string& cmd) {
+	std::string fullCmd = "service call SurfaceFlinger ";
+	fullCmd.append(cmd);
+
+	popen(fullCmd.c_str(), "r");
+}
 
 int main(int argc, char** argv) {
 	if (argc < 2)
@@ -16,28 +25,24 @@ int main(int argc, char** argv) {
 	}
 
 	std::cout << "Waiting for input from '" << argv[1] << "'\n";
-
-	std::cout << "connecting to fifo\n";
-	FILE* file = fopen("/data/local/tmp/fifo", "r");
-	std::cout << "fifo open";
 	
-	std::ifstream f_pipe("/data/local/tmp/fifo");//(argv[1]);
+	std::ifstream f_pipe(argv[1]);
 	std::cout << "Created pipe\n";
-	for (std::string line; std::getline(f_pipe, line);)
-	{
+
+	for (std::string line; std::getline(f_pipe, line);) {
 	    std::cout << "Got command " << line << "\n";
 
-		if (line == "exit")
-		{
+		if (line == "exit") {
 			std::cout << "Received exit!\n";
 			break;
 		}
-		
-		std::string cmd("service call SurfaceFlinger ");
-		cmd.append(line);
-		popen(cmd.c_str(), "r");
+
+		runCommand(line);
 	}
+
+	runCommand(STOP_COMMAND);
 	
 	std::cout << "Goodbye!\n";
+
 	return 0;
 }
