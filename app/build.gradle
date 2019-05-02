@@ -41,6 +41,12 @@ android {
         targetSdkVersion 25
         versionCode 37
         versionName "3.4.0"
+
+        externalNativeBuild {
+            cmake {
+                targets "re-shift.so"
+            }
+        }
     }
     buildTypes {
         release {
@@ -70,6 +76,13 @@ android {
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+    }
+    externalNativeBuild {
+        cmake {
+            version "3.10.2"
+            path "src/main/cpp/CMakeLists.txt"
+
+        }
     }
     lintOptions {
         disable 'NewApi','ExpiredTargetSdkVersion'

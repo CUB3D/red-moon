@@ -211,4 +211,6 @@ object Config : Preferences(appContext) {
 
     var lastChangelogShown by IntPreference(R.string.pref_key_last_changelog_shown, 0)
     //endregion
+
+    var rootMode by BooleanPreference(R.string.pref_key_root_mode, false)
 }

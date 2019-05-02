@@ -51,7 +51,14 @@ class FilterService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i("onCreate")
-        mFilter = Overlay(this)
+
+        if(Config.rootMode) {
+            mFilter = RootFilter()
+        } else {
+            mFilter = Overlay(this)
+        }
+        mFilter.onCreate()
+
         mCurrentAppMonitor = CurrentAppMonitor(this, executor)
         mNotification = Notification(this, mCurrentAppMonitor)
         mAnimator = ValueAnimator.ofObject(ProfileEvaluator(), mFilter.profile).apply {
@@ -63,6 +70,33 @@ class FilterService : Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Log.i("onStartCommand($intent, $flags, $startId)")
+
+        if(Config.rootMode) {
+            // Check for root perms
+            if(ShellUtils.isRootShellAvailable()) {
+                Log.i("Root shell, available")
+                val cmd = Command.getCommand(intent)
+                val end = if (cmd.turnOn) activeProfile else mFilter.profile.off
+
+                mAnimator.run {
+                    setObjectValues(mFilter.profile, end)
+                    val fraction = if (isRunning) animatedFraction else 1f
+                    duration = (cmd.time * fraction).toLong()
+                    removeAllListeners()
+                    addListener(CommandAnimatorListener(cmd, this@FilterService))
+                    Log.i("Animating from ${mFilter.profile} to $end in $duration")
+                    start()
+                }
+                // Use the root filter
+            } else {
+                Log.i("Root access denied")
+                EventBus.post(rootAccessDenied())
+                stopForeground(false)
+            }
+
+            return START_NOT_STICKY
+        }
+
         if (Permission.Overlay.isGranted) {
             val cmd = Command.getCommand(intent)
             val end = if (cmd.turnOn) activeProfile else mFilter.profile.off

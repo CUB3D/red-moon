@@ -20,4 +20,6 @@ class overlayPermissionDenied  : Event
 class locationAccessDenied     : Event
 class changeBrightnessDenied   : Event
 
+class rootAccessDenied     : Event
+
 data class locationService(val isSearching: Boolean, val isRunning: Boolean = true) : Event
