@@ -53,7 +53,7 @@ class FilterService : Service() {
         Log.i("onCreate")
 
         if(Config.rootMode) {
-            mFilter = RootFilter()
+            mFilter = RootFilter(this)
         } else {
             mFilter = Overlay(this)
         }

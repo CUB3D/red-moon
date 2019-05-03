@@ -19,7 +19,8 @@ fun InputStream.clean() {
 }
 
 class Shell(proc: Process): Closeable {
-    val STDOUT = proc.inputStream.bufferedReader()
+    val STDOUT = proc.inputStream
+    val STDOUTReader = STDOUT.bufferedReader()
     val STDIN = proc.outputStream
     val STDERR = proc.errorStream
 
@@ -37,7 +38,7 @@ class Shell(proc: Process): Closeable {
 
     fun readLine(): String {
         val feature : Future<String> = serialExecutor.submit(Callable<String> {
-            STDOUT.readLine() ?: ""
+            STDOUTReader.readLine() ?: ""
         })
 
         return try {
@@ -49,9 +50,12 @@ class Shell(proc: Process): Closeable {
     }
 
     override fun close() {
+        println("Closing 1")
         serialExecutor.shutdownNow()
+        println("Closing 2")
 
         STDOUT.close()
+        println("Closing 3")
 
         STDIN.flush()
         STDIN.close()
@@ -60,7 +64,7 @@ class Shell(proc: Process): Closeable {
     }
 
     companion object {
-        const val READ_TIMEOUT_SECONDS = 10L
+        const val READ_TIMEOUT_SECONDS = 5L
 
         fun exec(cmd: String): Shell {
             return Shell(Runtime.getRuntime().exec(cmd))

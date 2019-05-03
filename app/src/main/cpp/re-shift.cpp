@@ -25,24 +25,28 @@ int main(int argc, char** argv) {
 	}
 
 	std::cout << "Waiting for input from '" << argv[1] << "'\n";
-	
-	std::ifstream f_pipe(argv[1]);
-	std::cout << "Created pipe\n";
 
-	for (std::string line; std::getline(f_pipe, line);) {
-	    std::cout << "Got command " << line << "\n";
+	while(true) {
+        std::ifstream f_pipe(argv[1]);
+        std::cout << "Created pipe\n";
 
-		if (line == "exit") {
-			std::cout << "Received exit!\n";
-			break;
-		}
+        for (std::string line; std::getline(f_pipe, line);) {
+            std::cout << "Got command " << line << "\n";
 
-		runCommand(line);
-	}
+            if (line == "exit") {
+                std::cout << "Received exit!\n";
+                goto exit;
+            }
 
-	runCommand(STOP_COMMAND);
-	
-	std::cout << "Goodbye!\n";
+            runCommand(line);
+        }
+    }
 
-	return 0;
+	exit: {
+        runCommand(STOP_COMMAND);
+
+        std::cout << "Goodbye!\n";
+
+        return 0;
+    };
 }
