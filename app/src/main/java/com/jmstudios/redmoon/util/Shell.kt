@@ -71,13 +71,10 @@ class Shell(proc: Process): Closeable {
 
 object ShellUtils {
     fun isRootShellAvailable(): Boolean {
-        println("Checking for root perms")
         val line = Shell.exec("su").use {
             it.exec("id")
             it.readLine()
         }
-
-        println("Done")
 
         return line.contains("uid=0")
     }

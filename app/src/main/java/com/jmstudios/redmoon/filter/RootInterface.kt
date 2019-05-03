@@ -35,7 +35,7 @@ class RootFilter(ctx: Context) : Filter {
     private var thread: Thread? = null
 
     fun updateFilter(profile: Profile) {
-        println("Updating filter")
+        Log.i("Updating filter")
 
         f.printWriter().use {
             val red = Color.red(profile.filterColor) / 255.0f
@@ -65,7 +65,7 @@ class RootFilter(ctx: Context) : Filter {
             }
         }
 
-        println("Start root mode listener imp")
+        Log.i("Start root mode listener imp")
 
         val app = RedMoonApplication.app
         val pkg = app.packageManager.getPackageInfo(app.packageName, 0)
