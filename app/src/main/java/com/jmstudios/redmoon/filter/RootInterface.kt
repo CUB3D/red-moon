@@ -6,6 +6,7 @@
 package com.jmstudios.redmoon.filter
 
 import android.content.Context
+import android.graphics.Color
 import com.jmstudios.redmoon.RedMoonApplication
 import com.jmstudios.redmoon.ThemedAppCompatActivity
 import com.jmstudios.redmoon.filter.overlay.Overlay
@@ -21,30 +22,35 @@ import com.jmstudios.redmoon.util.activeProfile
 class RootFilter(ctx: Context) : Filter {
     override var profile = activeProfile.off
         set(value) {
-            Overlay.Log.i("profile set to: $value")
-            updateFilter(value)
+            if(thread != null)
+                updateFilter(value)
             field = value
         }
 
-    companion object : Logger() {
-//        const val FIFO_PATH =  "/data/data/com.jmstudios.redmoon.debug/cache/redmoon-root-control"
-    }
+    companion object : Logger()
 
     private var f = File(ctx.cacheDir, "redmoon-root-control")
     private val path = f.path
 
     private var thread: Thread? = null
-    private var active = false
 
     fun updateFilter(profile: Profile) {
         println("Updating filter")
 
         f.printWriter().use {
-            it.println("1015 i32 1 f 0.68 f -5.94743e-05 f -5.94743e-05 f 0 f 0.978947 f 0.978947 f -1.05344e-15 f 0 f 0.00472379 f -5.94743e-05 f 0.978947 f 0 f 0 f 0 f 0 f 0.978947")
+            val red = Color.red(profile.filterColor) / 255.0f
+            val green = Color.green(profile.filterColor) / 255.0f
+            val blue = Color.blue(profile.filterColor) / 255.0f
+
+            it.println("$red $green $blue")
         }
     }
 
     override fun onCreate() {
+        if(thread != null) {
+            return
+        }
+
         Log.i("Starting root mode listener")
         if (!f.exists()) {
             Log.i("Pipe doesn't exist, creating")
@@ -53,6 +59,10 @@ class RootFilter(ctx: Context) : Filter {
                 it.exec("mkfifo $path")
                 it.exec("chmod 666 $path") // Allow others to write to the fifo
             }
+
+            f.printWriter().use {
+                it.println("1 1 1")
+            }
         }
 
         println("Start root mode listener imp")
@@ -60,24 +70,23 @@ class RootFilter(ctx: Context) : Filter {
         val app = RedMoonApplication.app
         val pkg = app.packageManager.getPackageInfo(app.packageName, 0)
         val executablePath = "${pkg.applicationInfo.nativeLibraryDir}/re-shift.so"
-        println("native lib dir: $executablePath")
 
-        active = true
 
         thread = Thread {
+            Log.i("Started fifo polling thread")
+
             // Run the executable
             Shell.exec("su").use {
                 it.exec("$executablePath $path")
-                while (active) {
+                while (true) {
                     val line = it.readLine()
                     if (line == "Goodbye") {
+                        Log.i("Got exit command")
                         break
                     }
-                    println("Got output $line")
+                    Log.i("Got output $line")
                 }
-                println("Ending shell")
             }
-            println("FIFO poll ended")
         }
 
         thread?.start()
@@ -91,13 +100,15 @@ class RootFilter(ctx: Context) : Filter {
         f.printWriter().use {
             it.println("exit")
         }
-        active = false
 
-
+        // Wait for the fifo to be done
         thread?.join()
 
+        // Remove the fifo to cleanup any data leftover
         Shell.exec("su").use {
             it.exec("rm $path")
         }
+
+        thread = null
     }
 }

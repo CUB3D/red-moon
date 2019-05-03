@@ -50,12 +50,9 @@ class Shell(proc: Process): Closeable {
     }
 
     override fun close() {
-        println("Closing 1")
         serialExecutor.shutdownNow()
-        println("Closing 2")
 
         STDOUT.close()
-        println("Closing 3")
 
         STDIN.flush()
         STDIN.close()
